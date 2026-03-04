@@ -2,13 +2,21 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
 import pandas as pd
 import joblib
-import os
 from pathlib import Path
+from io import BytesIO
+import tempfile
+import traceback
 
 app = FastAPI()
 
 # Load model once
-model = joblib.load("std_predictor_v2_0303_2.joblib")
+BASE_DIR = Path(__file__).resolve().parent
+model_path = BASE_DIR / "std_predictor_v2_0303_2.joblib"
+
+if not model_path.exists():
+    raise FileNotFoundError(f"Model file not found at {model_path}")
+
+model = joblib.load(model_path)
 
 @app.get("/", response_class=HTMLResponse)
 def upload_page():
@@ -25,35 +33,38 @@ def upload_page():
     </html>
     """
 
-
 @app.post("/predict/")
 async def predict(file: UploadFile = File(...)):
+    try:
+        # Read uploaded file safely (Fix for Render issue)
+        contents = await file.read()
+        df = pd.read_excel(BytesIO(contents), engine="openpyxl")
 
-    # Read Excel
-    df = pd.read_excel(file.file)
+        required_columns = ["Mean", "A", "B", "C", "D", "E"]
 
-    required_columns = ["Mean", "A", "B", "C", "D", "E"]
+        # Validate columns
+        if not all(col in df.columns for col in required_columns):
+            return {"error": "Excel must contain columns: Mean, A, B, C, D, E"}
 
-    # Validate columns
-    if not all(col in df.columns for col in required_columns):
-        return {"error": "Excel must contain columns: Mean, A, B, C, D, E"}
+        X = df[required_columns]
 
-    X = df[required_columns]
+        # Predict
+        predictions = model.predict(X)
+        df["Predicted_STD"] = predictions
 
-    # Predict
-    predictions = model.predict(X)
+        # Save to temporary file (safe for Render)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+            output_path = tmp.name
 
-    df["Predicted_STD"] = predictions
+        df.to_excel(output_path, index=False)
 
-    # Create output filename
-    original_name = Path(file.filename).stem
-    output_filename = f"{original_name}_result.xlsx"
-    output_path = output_filename
+        return FileResponse(
+            path=output_path,
+            filename=f"{Path(file.filename).stem}_result.xlsx",
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-    df.to_excel(output_path, index=False)
-
-    return FileResponse(
-        path=output_path,
-        filename=output_filename,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    except Exception as e:
+        print("ERROR OCCURRED:")
+        traceback.print_exc()
+        return {"error": str(e)}
