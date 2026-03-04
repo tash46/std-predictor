@@ -6,3 +6,4 @@ openpyxl
 joblib
 python-multipart
 numpy==1.23.0
+jinja2==3.1.2
