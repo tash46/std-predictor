@@ -5,4 +5,4 @@ scikit-learn==1.4.2
 openpyxl
 joblib
 python-multipart
-numpy==1.24.4
+numpy==1.23.0
