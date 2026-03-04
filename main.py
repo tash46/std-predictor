@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
 import pandas as pd
+import numpy as np
 import joblib
 from pathlib import Path
 from io import BytesIO
@@ -24,6 +25,31 @@ model = bundle["model"]
 # Extract expected feature order
 feature_cols = bundle["features"]
 
+# -----------------------------
+# Feature Engineering
+# -----------------------------
+def engineer_features(df):
+    """
+    Must match training logic exactly.
+    """
+
+    # Cumulative ratios
+    df['cum_A'] = df['A']
+    df['cum_B'] = df['A'] + df['B']
+    df['cum_C'] = df['A'] + df['B'] + df['C']
+    df['cum_D'] = df['A'] + df['B'] + df['C'] + df['D']
+
+    # Entropy
+    ratios = ["A", "B", "C", "D", "E"]
+    df['entropy'] = df[ratios].apply(
+        lambda x: -np.sum(x * np.log(x + 1e-9)), axis=1
+    )
+
+    # Zero bins
+    df['zero_bins'] = (df[ratios] == 0).sum(axis=1)
+
+    return df
+
 @app.get("/", response_class=HTMLResponse)
 def upload_page():
     return """
@@ -46,13 +72,15 @@ async def predict(file: UploadFile = File(...)):
         contents = await file.read()
         df = pd.read_excel(BytesIO(contents), engine="openpyxl")
 
-        #required_columns = ["Mean", "A", "B", "C", "D", "E"]
+        required_columns = ["Mean", "A", "B", "C", "D", "E"]
 
         # Validate columns
-        if not all(col in df.columns for col in feature_cols):
-            return {"error": f"Excel must contain columns: {feature_cols}"}
+        if not all(col in df.columns for col in required_columns):
+            return {"error": f"Excel must contain columns: {required_columns}"}
+        
+        df = engineer_features(df)
 
-        X = df[feature_cols]
+        X = df[feature_cols].values
 
         # Predict
         predictions = model.predict(X)
