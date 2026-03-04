@@ -84,13 +84,15 @@ async def predict(file: UploadFile = File(...)):
 
         # Predict
         predictions = model.predict(X)
-        df["Predicted_STD"] = predictions
+        #df["Predicted_STD"] = predictions
+        output_df = df[["mean", "A", "B", "C", "D", "E"]].copy()
+        output_df["Predicted_STD"] = predictions
 
         # Save to temporary file (safe for Render)
         with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
             output_path = tmp.name
 
-        df.to_excel(output_path, index=False)
+        output_df.to_excel(output_path, index=False)
 
         return FileResponse(
             path=output_path,
