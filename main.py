@@ -72,7 +72,7 @@ async def predict(file: UploadFile = File(...)):
         contents = await file.read()
         df = pd.read_excel(BytesIO(contents), engine="openpyxl")
 
-        required_columns = ["Mean", "A", "B", "C", "D", "E"]
+        required_columns = ["mean", "A", "B", "C", "D", "E"]
 
         # Validate columns
         if not all(col in df.columns for col in required_columns):
