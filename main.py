@@ -16,7 +16,13 @@ model_path = BASE_DIR / "std_predictor_v2_0303_2.joblib"
 if not model_path.exists():
     raise FileNotFoundError(f"Model file not found at {model_path}")
 
-model = joblib.load(model_path)
+bundle = joblib.load(model_path)
+
+# Extract actual model
+model = bundle["model"]
+
+# Extract expected feature order
+feature_cols = bundle["features"]
 
 @app.get("/", response_class=HTMLResponse)
 def upload_page():
@@ -40,13 +46,13 @@ async def predict(file: UploadFile = File(...)):
         contents = await file.read()
         df = pd.read_excel(BytesIO(contents), engine="openpyxl")
 
-        required_columns = ["Mean", "A", "B", "C", "D", "E"]
+        #required_columns = ["Mean", "A", "B", "C", "D", "E"]
 
         # Validate columns
-        if not all(col in df.columns for col in required_columns):
-            return {"error": "Excel must contain columns: Mean, A, B, C, D, E"}
+        if not all(col in df.columns for col in feature_cols):
+            return {"error": f"Excel must contain columns: {feature_cols}"}
 
-        X = df[required_columns]
+        X = df[feature_cols]
 
         # Predict
         predictions = model.predict(X)
