@@ -12,7 +12,7 @@ app = FastAPI()
 
 # Load model once
 BASE_DIR = Path(__file__).resolve().parent
-model_path = BASE_DIR / "std_predictor_v2_0303_2.joblib"
+model_path = BASE_DIR / "std_predictor_v2_0304.joblib"
 
 if not model_path.exists():
     raise FileNotFoundError(f"Model file not found at {model_path}")
