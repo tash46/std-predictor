@@ -1,5 +1,6 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.templating import Jinja2Templates
 import pandas as pd
 import numpy as np
 import joblib
@@ -7,8 +8,16 @@ from pathlib import Path
 from io import BytesIO
 import tempfile
 import traceback
+import os
 
 app = FastAPI()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+templates = Jinja2Templates(directory=BASE_DIR)
+
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 # Load model once
 BASE_DIR = Path(__file__).resolve().parent
