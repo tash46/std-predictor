@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Standard Deviation Predictor</title>
+    <title>Guess the Standard Deviation!</title>
     <style>
         body {
             margin: 0;
@@ -9,22 +9,35 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #cfe9ff, #a7d8ff, #87c8ff);
             font-family: Arial, sans-serif;
         }
 
         .card {
             background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            padding: 45px;
+            border-radius: 18px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
             text-align: center;
-            width: 400px;
+            width: 420px;
+        }
+
+        .secret-subtitle {
+            font-size: 11px;
+            color: transparent;
+            user-select: text;
+            margin-bottom: 8px;
+        }
+
+        .secret-subtitle::selection {
+            color: white;
+            background: rgba(0, 0, 0, 0.4);
         }
 
         h1 {
             margin-bottom: 30px;
-            color: #333;
+            color: #2c3e50;
+            font-weight: 600;
         }
 
         input[type="file"] {
@@ -32,26 +45,28 @@
         }
 
         button {
-            padding: 10px 25px;
+            padding: 12px 30px;
             border: none;
-            border-radius: 25px;
-            background: #667eea;
+            border-radius: 30px;
+            background: #87c8ff;
             color: white;
             font-size: 16px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s ease;
         }
 
         button:hover {
-            background: #5a67d8;
+            background: #3399ff;
             transform: scale(1.05);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
 
 <body>
     <div class="card">
-        <h1>Standard Deviation Predictor</h1>
+        <p class="secret-subtitle">병현이만을 위해 연경이가 만든</p>
+        <h1>Guess the Standard Deviation!</h1>
 
         <form action="/predict" method="post" enctype="multipart/form-data">
             <input type="file" name="file" required>
